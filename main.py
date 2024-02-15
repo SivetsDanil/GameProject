@@ -3,6 +3,7 @@ import copy
 import time
 import sys
 import os
+import random
 
 
 def terminate():
@@ -56,6 +57,7 @@ player_group = pygame.sprite.Group()
 box_group = pygame.sprite.Group()
 tile_width = tile_height = 50
 borders = pygame.sprite.Group()
+emp_tiles = []
 
 
 def load_level(filename):
@@ -106,16 +108,22 @@ class Board:
             for x in range(len(self.level[y])):
                 if self.level[y][x] == 0:
                     Tile('empty', x, y)
+                    emp_tiles.append((x, y))
                 elif self.level[y][x] == 1:
                     Tile('wall', x, y)
                 elif self.level[y][x] == 2:
                     Tile('empty', x, y)
+                    emp_tiles.append((x, y))
                     new_hunter = Hunter(self, x, y)
                     self.flag = 1
                     self.cords = (x, y)
         new_player = Player(self)
         all_sprites.draw(screen)
         return new_hunter, new_player
+
+    def generate_coins(self):
+        for x, y in random.choices(emp_tiles, k=5):
+            Hunter(self, x, y)
 
     def update(self):
         new_hunter, x, y = None, None, None
@@ -363,7 +371,7 @@ if __name__ == '__main__':
     Border(width + 15, 0, width + 15, height)
     pygame.display.set_caption('test')
     MYEVENTTYPE = pygame.USEREVENT + 1
-    timer = 100
+    timer = 250
     start_screen()
 
     pygame.time.set_timer(MYEVENTTYPE, timer)
