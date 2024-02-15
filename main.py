@@ -26,6 +26,17 @@ def load_image(name, colorkey=None):
     return image
 
 
+class Border(pygame.sprite.Sprite):
+    def __init__(self, x1, y1, x2, y2):
+        super().__init__(borders)
+        if x1 == x2:
+            self.image = pygame.Surface([1, y2 - y1])
+            self.rect = pygame.Rect(x1, y1, 1, y2 - y1)
+        else:
+            self.image = pygame.Surface([x2 - x1, 1])
+            self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
+
+
 FPS = 50
 pygame.init()
 size = width, height = 500, 500
@@ -44,6 +55,7 @@ hunter_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 box_group = pygame.sprite.Group()
 tile_width = tile_height = 50
+borders = pygame.sprite.Group()
 
 
 def load_level(filename):
@@ -63,6 +75,8 @@ def clear():
         item.kill()
     for item in box_group:
         item.kill()
+    for item in player_group:
+        item.kill()
 
 
 class Board:
@@ -73,11 +87,12 @@ class Board:
         self.p_cord = [3, 3]
         for i in load_level('map.txt'):
             board.append(list(map(int, i.replace('.', '0,').replace('#', '1,').replace('@', '2,').split(',')[:-1])))
-        self.level = board
+        self.level = copy.deepcopy(board)
         self.left = 0
         self.top = 0
         self.cell_size = 2
         self.last = []
+        self.save = []
 
     def set_view(self, left, top, cell_size):
         self.left = left
@@ -102,6 +117,24 @@ class Board:
         all_sprites.draw(screen)
         return new_hunter, new_player
 
+    def update(self):
+        new_hunter, x, y = None, None, None
+        for item in all_sprites:
+            if item in hunter_group or item in player_group:
+                item.kill()
+        for item in player_group:
+            item.kill()
+        for item in hunter_group:
+            item.kill()
+        for y in range(len(self.level)):
+            for x in range(len(self.level[y])):
+                if self.level[y][x] == 2:
+                    new_hunter = Hunter(self, x, y)
+                    self.cords = (x, y)
+        new_player = Player(self)
+        all_sprites.draw(screen)
+        return new_hunter, new_player
+
     def get_cell(self, mouse_pos):
         x, y = mouse_pos
         x = (x - self.left) // self.cell_size
@@ -120,7 +153,7 @@ class Hunter(pygame.sprite.Sprite):
     def has_path(self, x1, y1, x2, y2):
         self.table = copy.deepcopy(self.board.level)
         for i in range(len(self.table)):
-            for j in range(len(self.table)):
+            for j in range(len(self.table[0])):
                 if self.table[i][j] == 1:
                     self.table[i][j] = -1
         self.table[y2][x2] = -2
@@ -135,8 +168,7 @@ class Hunter(pygame.sprite.Sprite):
     def go_to(self, cell):
         if self.board.flag != 0 and self.board.level[cell[1]][cell[0]] == 0:
             if self.has_path(cell[0], cell[1], self.board.cords[0], self.board.cords[1]):
-                self.save = [cell[0], cell[1]]
-                self.board.flag = 0
+                self.board.save = [cell[0], cell[1]]
                 self.i_cord = cell
                 self.show_path()
 
@@ -196,7 +228,7 @@ class Hunter(pygame.sprite.Sprite):
                 x1, y1, x0, y0 = self.actions[::-1][0]
                 self.board.level[y1][x1] = 2
                 self.board.level[y0][x0] = 0
-                self.board.render()
+                self.board.update()
                 pygame.display.flip()
                 self.actions = self.actions[:-1]
             else:
@@ -227,28 +259,28 @@ class Player(pygame.sprite.Sprite):
         if event.dict['key'] == 1073741904:
             player.rect.x -= 50
             board.p_cord[0] -= 1
-            if pygame.sprite.spritecollideany(self, box_group):
+            if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, borders):
                 board.p_cord[0] += 1
                 player.rect.x += 50
         if event.dict['key'] == 1073741903:
             board.p_cord[0] += 1
             player.rect.x += 50
-            if pygame.sprite.spritecollideany(self, box_group):
+            if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, borders):
                 player.rect.x -= 50
                 board.p_cord[0] -= 1
         if event.dict['key'] == 1073741906:
             player.rect.y -= 50
             board.p_cord[1] -= 1
-            if pygame.sprite.spritecollideany(self, box_group):
+            if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, borders):
                 player.rect.y += 50
                 board.p_cord[1] += 1
         if event.dict['key'] == 1073741905:
             player.rect.y += 50
             board.p_cord[1] += 1
-            if pygame.sprite.spritecollideany(self, box_group):
+            if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, borders):
                 player.rect.y -= 50
                 board.p_cord[1] -= 1
-        board.render()
+        board.update()
 
 
 def start_screen():
@@ -323,15 +355,24 @@ if __name__ == '__main__':
     board.set_view(0, 0, 50)
     running = True
     pygame.init()
-    pygame.display.set_mode((level_x * 50, level_y * 50))
+    width, height = level_x * 50, level_y * 50
+    pygame.display.set_mode((width, height))
+    Border(0, -45, width, -45)
+    Border(0, height + 5, width, height + 5)
+    Border(-15, 0, -15, height)
+    Border(width + 15, 0, width + 15, height)
     pygame.display.set_caption('test')
     MYEVENTTYPE = pygame.USEREVENT + 1
-    timer = 200
+    timer = 100
     start_screen()
+
     pygame.time.set_timer(MYEVENTTYPE, timer)
     screen.fill((0, 0, 0))
+
     hunter, player = board.render()
+
     pygame.display.flip()
+
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -344,3 +385,4 @@ if __name__ == '__main__':
                 hunter.go_to(board.p_cord)
             if pygame.sprite.spritecollideany(player, hunter_group):
                 end_screen()
+
