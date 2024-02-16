@@ -71,6 +71,7 @@ def load_level(filename):
 
 
 def clear():
+    emp_tiles = []
     for item in all_sprites:
         item.kill()
     for item in tiles_group:
@@ -372,6 +373,7 @@ if __name__ == '__main__':
     for m in maps:
         over = False
         while not over:
+            clear()
             game_map = load_level(m)
             level_x, level_y = len(game_map[0]), len(game_map)
             board = Board(level_x, level_y, game_map)
