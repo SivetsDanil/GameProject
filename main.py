@@ -49,12 +49,15 @@ tile_images = {
 }
 hunter_image = pygame.transform.scale(load_image('bomb2.png'), (50, 50))
 player_image = load_image('mario.png')
+coin_image = pygame.transform.scale(load_image('coin.png', -1), (25, 25))
+
 hunter = None
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 hunter_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 box_group = pygame.sprite.Group()
+coins_group = pygame.sprite.Group()
 tile_width = tile_height = 50
 borders = pygame.sprite.Group()
 emp_tiles = []
@@ -123,7 +126,7 @@ class Board:
 
     def generate_coins(self):
         for x, y in random.choices(emp_tiles, k=5):
-            Hunter(self, x, y)
+            Coin(x, y)
 
     def update(self):
         new_hunter, x, y = None, None, None
@@ -291,6 +294,18 @@ class Player(pygame.sprite.Sprite):
         board.update()
 
 
+class Coin(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__(coins_group, all_sprites)
+        self.image = coin_image
+        self.board = board
+        self.rect = self.image.get_rect().move(tile_width * x + 12.5, tile_height * y + 12.5)
+
+    def update(self):
+        if pygame.sprite.spritecollideany(self, player_group):
+            self.kill()
+
+
 def start_screen():
     intro_text = ["ЗАСТАВКА", "",
                   "Правила игры",
@@ -339,11 +354,9 @@ def end_screen():
 
 
 class Gameover(pygame.sprite.Sprite):
-    image = load_image("gameover.png")
-
     def __init__(self, *group):
         super().__init__(*group)
-        self.image = Gameover.image
+        self.image = end_image
         self.rect = self.image.get_rect()
         self.x = -600
         self.y = 0
@@ -371,16 +384,16 @@ if __name__ == '__main__':
     Border(width + 15, 0, width + 15, height)
     pygame.display.set_caption('test')
     MYEVENTTYPE = pygame.USEREVENT + 1
-    timer = 250
+    timer = 500
     start_screen()
-
     pygame.time.set_timer(MYEVENTTYPE, timer)
     screen.fill((0, 0, 0))
 
     hunter, player = board.render()
 
     pygame.display.flip()
-
+    board.generate_coins()
+    coins_group.draw(screen)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -392,5 +405,11 @@ if __name__ == '__main__':
                 player.go(event)
                 hunter.go_to(board.p_cord)
             if pygame.sprite.spritecollideany(player, hunter_group):
+                end_image = load_image("gameover.png")
+                end_screen()
+            if pygame.sprite.spritecollideany(player, coins_group):
+                coins_group.update()
+            if len(coins_group.sprites()) == 0:
+                end_image = load_image("win.jpg")
                 end_screen()
 
