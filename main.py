@@ -38,11 +38,9 @@ class Border(pygame.sprite.Sprite):
             self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
 
 
-FPS = 50
 pygame.init()
 size = width, height = 500, 500
 screen = pygame.display.set_mode(size)
-clock = pygame.time.Clock()
 tile_images = {
     'wall': load_image('box.png'),
     'empty': load_image('grass.png')
@@ -61,6 +59,7 @@ coins_group = pygame.sprite.Group()
 tile_width = tile_height = 50
 borders = pygame.sprite.Group()
 emp_tiles = []
+pygame.mouse.set_visible(False)
 
 
 def load_level(filename):
@@ -85,12 +84,12 @@ def clear():
 
 
 class Board:
-    def __init__(self, width, height):
+    def __init__(self, width, height, game_map):
         self.width = width
         self.height = height
         board = []
         self.p_cord = [3, 3]
-        for i in load_level('map.txt'):
+        for i in game_map:
             board.append(list(map(int, i.replace('.', '0,').replace('#', '1,').replace('@', '2,').split(',')[:-1])))
         self.level = copy.deepcopy(board)
         self.left = 0
@@ -273,19 +272,19 @@ class Player(pygame.sprite.Sprite):
             if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, borders):
                 board.p_cord[0] += 1
                 player.rect.x += 50
-        if event.dict['key'] == 1073741903:
+        elif event.dict['key'] == 1073741903:
             board.p_cord[0] += 1
             player.rect.x += 50
             if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, borders):
                 player.rect.x -= 50
                 board.p_cord[0] -= 1
-        if event.dict['key'] == 1073741906:
+        elif event.dict['key'] == 1073741906:
             player.rect.y -= 50
             board.p_cord[1] -= 1
             if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, borders):
                 player.rect.y += 50
                 board.p_cord[1] += 1
-        if event.dict['key'] == 1073741905:
+        elif event.dict['key'] == 1073741905:
             player.rect.y += 50
             board.p_cord[1] += 1
             if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, borders):
@@ -332,7 +331,6 @@ def start_screen():
             elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 return
         pygame.display.flip()
-        clock.tick(FPS)
 
 
 def end_screen():
@@ -345,12 +343,11 @@ def end_screen():
             if event.type == pygame.QUIT:
                 terminate()
             if event.type == pygame.KEYDOWN and cur.flag == 1:
-                terminate()
+                return
             if event.type == MYEVENTTYPE:
                 cur.update()
                 screen.blit(cur.image, (cur.x, cur.y))
         pygame.display.flip()
-    terminate()
 
 
 class Gameover(pygame.sprite.Sprite):
@@ -371,45 +368,51 @@ class Gameover(pygame.sprite.Sprite):
 
 
 if __name__ == '__main__':
-    level_x, level_y = len(load_level('map.txt')[0]), len(load_level('map.txt'))
-    board = Board(level_x, level_y)
-    board.set_view(0, 0, 50)
-    running = True
-    pygame.init()
-    width, height = level_x * 50, level_y * 50
-    pygame.display.set_mode((width, height))
-    Border(0, -45, width, -45)
-    Border(0, height + 5, width, height + 5)
-    Border(-15, 0, -15, height)
-    Border(width + 15, 0, width + 15, height)
-    pygame.display.set_caption('test')
-    MYEVENTTYPE = pygame.USEREVENT + 1
-    timer = 500
-    start_screen()
-    pygame.time.set_timer(MYEVENTTYPE, timer)
-    screen.fill((0, 0, 0))
-
-    hunter, player = board.render()
-
-    pygame.display.flip()
-    board.generate_coins()
-    coins_group.draw(screen)
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == MYEVENTTYPE:
-                hunter.update()
-                pygame.display.flip()
-            if event.type == pygame.KEYDOWN:
-                player.go(event)
-                hunter.go_to(board.p_cord)
-            if pygame.sprite.spritecollideany(player, hunter_group):
-                end_image = load_image("gameover.png")
-                end_screen()
-            if pygame.sprite.spritecollideany(player, coins_group):
-                coins_group.update()
-            if len(coins_group.sprites()) == 0:
-                end_image = load_image("win.jpg")
-                end_screen()
+    maps = ['map.txt', 'map2.txt']
+    for m in maps:
+        over = False
+        while not over:
+            game_map = load_level(m)
+            level_x, level_y = len(game_map[0]), len(game_map)
+            board = Board(level_x, level_y, game_map)
+            board.set_view(0, 0, 50)
+            running = True
+            pygame.init()
+            width, height = level_x * 50, level_y * 50
+            pygame.display.set_mode((width, height))
+            Border(0, -45, width, -45)
+            Border(0, height + 5, width, height + 5)
+            Border(-15, 0, -15, height)
+            Border(width + 15, 0, width + 15, height)
+            pygame.display.set_caption('test')
+            MYEVENTTYPE = pygame.USEREVENT + 1
+            timer = 500
+            start_screen()
+            pygame.time.set_timer(MYEVENTTYPE, timer)
+            screen.fill((0, 0, 0))
+            hunter, player = board.render()
+            pygame.display.flip()
+            board.generate_coins()
+            coins_group.draw(screen)
+            while running:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        terminate()
+                    if event.type == MYEVENTTYPE:
+                        hunter.update()
+                        pygame.display.flip()
+                    if event.type == pygame.KEYDOWN:
+                        player.go(event)
+                        hunter.go_to(board.p_cord)
+                    if pygame.sprite.spritecollideany(player, hunter_group):
+                        end_image = load_image("gameover.png")
+                        end_screen()
+                        running = False
+                    if pygame.sprite.spritecollideany(player, coins_group):
+                        coins_group.update()
+                    if len(coins_group.sprites()) == 0:
+                        end_image = load_image("win.jpg")
+                        end_screen()
+                        running = False
+                        over = True
 
