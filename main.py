@@ -5,6 +5,10 @@ import sys
 import os
 import random
 
+pygame.init()
+size = width, height = 500, 500
+screen = pygame.display.set_mode(size)
+
 
 def terminate():
     pygame.quit()
@@ -38,17 +42,25 @@ class Border(pygame.sprite.Sprite):
             self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
 
 
-pygame.init()
-size = width, height = 500, 500
-screen = pygame.display.set_mode(size)
-tile_images = {
-    'wall': load_image('box.png'),
-    'empty': load_image('grass.png')
-}
-hunter_image = pygame.transform.scale(load_image('bomb2.png'), (50, 50))
-player_image = load_image('mario.png')
-coin_image = pygame.transform.scale(load_image('coin.png', -1), (25, 25))
+class PlayerImage():
+    player_image1 = pygame.transform.scale(load_image('player.png', -1), (50, 50))
+    player_image2 = pygame.transform.flip(player_image1, True, False)
+    mode = 'l'
 
+    def get(self):
+        if self.mode == 'r':
+            return self.player_image1
+        return self.player_image2
+
+
+tile_images = {
+    'wall': pygame.transform.scale(load_image('box.jpg'), (50, 50)),
+    'empty': pygame.transform.rotate(pygame.transform.scale(load_image('floor2.jpg'), (50, 50)), 90)
+}
+hunter_image = pygame.transform.scale(load_image('pirat.png'), (50, 50))
+
+coin_image = pygame.transform.scale(load_image('coin.png', -1), (25, 25))
+player_image = PlayerImage()
 hunter = None
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
@@ -59,6 +71,7 @@ coins_group = pygame.sprite.Group()
 tile_width = tile_height = 50
 border_group = pygame.sprite.Group()
 pygame.mouse.set_visible(False)
+pygame.display.set_icon(load_image('icon.png'))
 
 
 def load_level(filename):
@@ -263,18 +276,20 @@ class Tile(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, board):
         super().__init__(player_group, all_sprites)
-        self.image = player_image
+        self.image = player_image.get()
         self.board = board
-        self.rect = self.image.get_rect().move(tile_width * board.p_cord[0] + 15, tile_height * board.p_cord[1] + 5)
+        self.rect = self.image.get_rect().move(tile_width * board.p_cord[0], tile_height * board.p_cord[1])
 
     def go(self, event):
         if event.dict['key'] == 1073741904:
+            player_image.mode = 'l'
             player.rect.x -= 50
             board.p_cord[0] -= 1
             if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, border_group):
                 board.p_cord[0] += 1
                 player.rect.x += 50
         elif event.dict['key'] == 1073741903:
+            player_image.mode = 'r'
             board.p_cord[0] += 1
             player.rect.x += 50
             if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, border_group):
@@ -307,16 +322,14 @@ class Coin(pygame.sprite.Sprite):
             self.kill()
 
 
-def start_screen():
-    intro_text = ["ЗАСТАВКА", "",
-                  "Правила игры",
-                  "Если в правилах несколько строк,",
-                  "приходится выводить их построчно"]
-
-    fon = pygame.transform.scale(load_image('fon.jpg'), screen.get_size())
+def start_screen(num):
+    intro_text = [f"  Уровень {num}", "",
+                  "  Необходимо собрать 5 монет",
+                  "  и не попасться пирату"]
+    fon = pygame.transform.scale(load_image('intro.jpg'), screen.get_size())
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 30)
-    text_coord = 50
+    text_coord = height - 200
     for line in intro_text:
         string_rendered = font.render(line, 1, pygame.Color('white'))
         intro_rect = string_rendered.get_rect()
@@ -340,6 +353,7 @@ def end_screen():
     cur = Gameover()
     MYEVENTTYPE = pygame.USEREVENT + 1
     pygame.time.set_timer(MYEVENTTYPE, 2)
+
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -364,8 +378,8 @@ class Gameover(pygame.sprite.Sprite):
         super().__init__(*group)
         self.image = end_image
         self.rect = self.image.get_rect()
-        self.x = -600
-        self.y = 0
+        self.x = -300
+        self.y = 10
         self.f = 0
         self.flag = 0
 
@@ -378,7 +392,9 @@ class Gameover(pygame.sprite.Sprite):
 
 if __name__ == '__main__':
     maps = ['map2.txt', 'map.txt']
+    num = 0
     for m in maps:
+        num += 1
         over = False
         while not over:
             clear()
@@ -390,10 +406,10 @@ if __name__ == '__main__':
             pygame.init()
             width, height = level_x * 50, level_y * 50
             pygame.display.set_mode((width, height))
-            pygame.display.set_caption('test')
+            pygame.display.set_caption('Pirat Escape')
             MYEVENTTYPE = pygame.USEREVENT + 1
             timer = 500
-            start_screen()
+            start_screen(num)
             pygame.time.set_timer(MYEVENTTYPE, timer)
             screen.fill((0, 0, 0))
             hunter, player = board.render()
@@ -412,13 +428,13 @@ if __name__ == '__main__':
                         player.go(event)
                         hunter.go_to(board.p_cord)
                     if pygame.sprite.spritecollideany(player, hunter_group):
-                        end_image = load_image("gameover.png")
+                        end_image = pygame.transform.scale(load_image("gameover.png"), (300, 150))
                         end_screen()
                         running = False
                     if pygame.sprite.spritecollideany(player, coins_group):
                         coins_group.update()
                     if len(coins_group.sprites()) == 0:
-                        end_image = load_image("win.jpg")
+                        end_image = pygame.transform.scale(load_image("win.jpg"), (300, 150))
                         end_screen()
                         running = False
                         over = True
