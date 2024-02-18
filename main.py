@@ -29,7 +29,7 @@ def load_image(name, colorkey=None):
 
 class Border(pygame.sprite.Sprite):
     def __init__(self, x1, y1, x2, y2):
-        super().__init__(borders)
+        super().__init__(border_group)
         if x1 == x2:
             self.image = pygame.Surface([1, y2 - y1])
             self.rect = pygame.Rect(x1, y1, 1, y2 - y1)
@@ -57,8 +57,7 @@ player_group = pygame.sprite.Group()
 box_group = pygame.sprite.Group()
 coins_group = pygame.sprite.Group()
 tile_width = tile_height = 50
-borders = pygame.sprite.Group()
-emp_tiles = []
+border_group = pygame.sprite.Group()
 pygame.mouse.set_visible(False)
 
 
@@ -71,7 +70,6 @@ def load_level(filename):
 
 
 def clear():
-    emp_tiles = []
     for item in all_sprites:
         item.kill()
     for item in tiles_group:
@@ -82,6 +80,8 @@ def clear():
         item.kill()
     for item in player_group:
         item.kill()
+    for item in border_group:
+        item.kill()
 
 
 class Board:
@@ -89,6 +89,7 @@ class Board:
         self.width = width
         self.height = height
         board = []
+        self.emp_tiles = []
         self.p_cord = [3, 3]
         for i in game_map:
             board.append(list(map(int, i.replace('.', '0,').replace('#', '1,').replace('@', '2,').split(',')[:-1])))
@@ -111,12 +112,12 @@ class Board:
             for x in range(len(self.level[y])):
                 if self.level[y][x] == 0:
                     Tile('empty', x, y)
-                    emp_tiles.append((x, y))
+                    self.emp_tiles.append((x, y))
                 elif self.level[y][x] == 1:
                     Tile('wall', x, y)
                 elif self.level[y][x] == 2:
                     Tile('empty', x, y)
-                    emp_tiles.append((x, y))
+                    self.emp_tiles.append((x, y))
                     new_hunter = Hunter(self, x, y)
                     self.flag = 1
                     self.cords = (x, y)
@@ -125,7 +126,7 @@ class Board:
         return new_hunter, new_player
 
     def generate_coins(self):
-        for x, y in random.choices(emp_tiles, k=5):
+        for x, y in random.choices(self.emp_tiles, k=5):
             Coin(x, y)
 
     def update(self):
@@ -270,25 +271,25 @@ class Player(pygame.sprite.Sprite):
         if event.dict['key'] == 1073741904:
             player.rect.x -= 50
             board.p_cord[0] -= 1
-            if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, borders):
+            if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, border_group):
                 board.p_cord[0] += 1
                 player.rect.x += 50
         elif event.dict['key'] == 1073741903:
             board.p_cord[0] += 1
             player.rect.x += 50
-            if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, borders):
+            if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, border_group):
                 player.rect.x -= 50
                 board.p_cord[0] -= 1
         elif event.dict['key'] == 1073741906:
             player.rect.y -= 50
             board.p_cord[1] -= 1
-            if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, borders):
+            if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, border_group):
                 player.rect.y += 50
                 board.p_cord[1] += 1
         elif event.dict['key'] == 1073741905:
             player.rect.y += 50
             board.p_cord[1] += 1
-            if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, borders):
+            if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, border_group):
                 player.rect.y -= 50
                 board.p_cord[1] -= 1
         board.update()
@@ -351,6 +352,13 @@ def end_screen():
         pygame.display.flip()
 
 
+def set_borders(width, height):
+    Border(0, -45, width, -45)
+    Border(0, height + 5, width, height + 5)
+    Border(-15, 0, -15, height)
+    Border(width + 15, 0, width + 15, height)
+
+
 class Gameover(pygame.sprite.Sprite):
     def __init__(self, *group):
         super().__init__(*group)
@@ -369,7 +377,7 @@ class Gameover(pygame.sprite.Sprite):
 
 
 if __name__ == '__main__':
-    maps = ['map.txt', 'map2.txt']
+    maps = ['map2.txt', 'map.txt']
     for m in maps:
         over = False
         while not over:
@@ -382,10 +390,6 @@ if __name__ == '__main__':
             pygame.init()
             width, height = level_x * 50, level_y * 50
             pygame.display.set_mode((width, height))
-            Border(0, -45, width, -45)
-            Border(0, height + 5, width, height + 5)
-            Border(-15, 0, -15, height)
-            Border(width + 15, 0, width + 15, height)
             pygame.display.set_caption('test')
             MYEVENTTYPE = pygame.USEREVENT + 1
             timer = 500
@@ -393,6 +397,7 @@ if __name__ == '__main__':
             pygame.time.set_timer(MYEVENTTYPE, timer)
             screen.fill((0, 0, 0))
             hunter, player = board.render()
+            set_borders(width, height)
             pygame.display.flip()
             board.generate_coins()
             coins_group.draw(screen)
@@ -417,4 +422,3 @@ if __name__ == '__main__':
                         end_screen()
                         running = False
                         over = True
-

@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8bac9edd-9c12-4af3-9c0e-051390cb6fb5" name="Changes" comment="add many maps for game" />
+    <list default="true" id="8bac9edd-9c12-4af3-9c0e-051390cb6fb5" name="Changes" comment="small fix">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/map2.txt" beforeDir="false" afterPath="$PROJECT_DIR$/data/map2.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -123,7 +127,15 @@
       <option name="project" value="LOCAL" />
       <updated>1708092934401</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="small fix">
+      <option name="closed" value="true" />
+      <created>1708097780853</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1708097780853</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -132,7 +144,8 @@
     <MESSAGE value="not done money (126)" />
     <MESSAGE value="add coins and win image" />
     <MESSAGE value="add many maps for game" />
-    <option name="LAST_COMMIT_MESSAGE" value="add many maps for game" />
+    <MESSAGE value="small fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="small fix" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
