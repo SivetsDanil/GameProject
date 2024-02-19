@@ -6,7 +6,7 @@ import os
 import random
 
 pygame.init()
-size = width, height = 500, 500
+size = width, height = 800, 500
 screen = pygame.display.set_mode(size)
 
 
@@ -51,6 +51,11 @@ class PlayerImage():
         if self.mode == 'r':
             return self.player_image1
         return self.player_image2
+
+    def reverse(self):
+        self.player_image1 = pygame.transform.flip(self.player_image1, True, False)
+        self.player_image2 = pygame.transform.flip(self.player_image2, True, False)
+        self.player_image1 = self.player_image2
 
 
 tile_images = {
@@ -307,6 +312,8 @@ class Player(pygame.sprite.Sprite):
             if pygame.sprite.spritecollideany(self, box_group) or pygame.sprite.spritecollideany(self, border_group):
                 player.rect.y -= 50
                 board.p_cord[1] -= 1
+        else:
+            return
         board.update()
 
 
@@ -322,7 +329,7 @@ class Coin(pygame.sprite.Sprite):
             self.kill()
 
 
-def start_screen(num):
+def start_level(num):
     intro_text = [f"  Уровень {num}", "",
                   "  Необходимо собрать 5 монет",
                   "  и не попасться пирату"]
@@ -348,7 +355,58 @@ def start_screen(num):
         pygame.display.flip()
 
 
+def start_screen():
+    intro_text = ["  Добро пожаловать в игру Pirat Escape!",
+                  "  Не попадись пирату, удачи!"]
+    fon = pygame.transform.scale(load_image('start_screen.jpg'), (800, 500))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    text_coord = height - 100
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 10
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+
+
 def end_screen():
+    intro_text = ["               Конец!", "",
+                  "                  Спасибо, что играли в эту игру",
+                  ]
+    screen = pygame.display.set_mode((800, 500))
+    fon = pygame.transform.scale(load_image('end_screen.jpeg'), screen.get_size())
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    text_coord = 500 - 160
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 10
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+
+
+def end_level():
     time.sleep(0.50)
     cur = Gameover()
     MYEVENTTYPE = pygame.USEREVENT + 1
@@ -391,7 +449,9 @@ class Gameover(pygame.sprite.Sprite):
 
 
 if __name__ == '__main__':
-    maps = ['map2.txt', 'map.txt']
+    pygame.display.set_caption('Pirat Escape')
+    start_screen()
+    maps = ['map2.txt']
     num = 0
     for m in maps:
         num += 1
@@ -406,10 +466,9 @@ if __name__ == '__main__':
             pygame.init()
             width, height = level_x * 50, level_y * 50
             pygame.display.set_mode((width, height))
-            pygame.display.set_caption('Pirat Escape')
             MYEVENTTYPE = pygame.USEREVENT + 1
             timer = 500
-            start_screen(num)
+            start_level(num)
             pygame.time.set_timer(MYEVENTTYPE, timer)
             screen.fill((0, 0, 0))
             hunter, player = board.render()
@@ -429,12 +488,14 @@ if __name__ == '__main__':
                         hunter.go_to(board.p_cord)
                     if pygame.sprite.spritecollideany(player, hunter_group):
                         end_image = pygame.transform.scale(load_image("gameover.png"), (300, 150))
-                        end_screen()
+                        end_level()
                         running = False
                     if pygame.sprite.spritecollideany(player, coins_group):
                         coins_group.update()
                     if len(coins_group.sprites()) == 0:
                         end_image = pygame.transform.scale(load_image("win.jpg"), (300, 150))
-                        end_screen()
+                        end_level()
                         running = False
                         over = True
+    end_screen()
+    terminate()
