@@ -67,6 +67,7 @@ hunter_image = pygame.transform.scale(load_image('pirat.png'), (50, 50))
 coin_image = pygame.transform.scale(load_image('coin.png', -1), (25, 25))
 player_image = PlayerImage()
 hunter = None
+
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 hunter_group = pygame.sprite.Group()
@@ -75,6 +76,7 @@ box_group = pygame.sprite.Group()
 coins_group = pygame.sprite.Group()
 tile_width = tile_height = 50
 border_group = pygame.sprite.Group()
+
 pygame.mouse.set_visible(False)
 pygame.display.set_icon(load_image('icon.png'))
 
@@ -148,22 +150,13 @@ class Board:
             Coin(x, y)
 
     def update(self):
-        new_hunter, x, y = None, None, None
-        for item in all_sprites:
-            if item in hunter_group or item in player_group:
-                item.kill()
-        for item in player_group:
-            item.kill()
-        for item in hunter_group:
-            item.kill()
         for y in range(len(self.level)):
             for x in range(len(self.level[y])):
                 if self.level[y][x] == 2:
-                    new_hunter = Hunter(self, x, y)
+                    hunter.rect = hunter.image.get_rect().move(tile_width * x, tile_height * y)
                     self.cords = (x, y)
-        new_player = Player(self)
         all_sprites.draw(screen)
-        return new_hunter, new_player
+        hunter_group.draw(screen)
 
     def get_cell(self, mouse_pos):
         x, y = mouse_pos
@@ -484,10 +477,16 @@ if __name__ == '__main__':
                         hunter.update()
                         pygame.display.flip()
                     if event.type == pygame.KEYDOWN:
+                        timer -= 1
                         player.go(event)
                         hunter.go_to(board.p_cord)
                     if pygame.sprite.spritecollideany(player, hunter_group):
                         end_image = pygame.transform.scale(load_image("gameover.png"), (300, 150))
+                        player.kill()
+                        hunter.image = pygame.transform.scale(load_image("fignt.png", -1), (50, 50))
+                        all_sprites.draw(screen)
+                        hunter_group.draw(screen)
+                        pygame.display.flip()
                         end_level()
                         running = False
                     if pygame.sprite.spritecollideany(player, coins_group):
