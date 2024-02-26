@@ -5,7 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8bac9edd-9c12-4af3-9c0e-051390cb6fb5" name="Changes" comment="start/end">
-      <change afterPath="$PROJECT_DIR$/data/fignt.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/map3.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/map4.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -178,7 +180,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>149</line>
+          <line>150</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>

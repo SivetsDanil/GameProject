@@ -146,7 +146,8 @@ class Board:
         return new_hunter, new_player
 
     def generate_coins(self):
-        for x, y in random.choices(self.emp_tiles, k=5):
+        n = int(len(self.emp_tiles) / 5)
+        for x, y in random.choices(self.emp_tiles, k=n):
             Coin(x, y)
 
     def update(self):
@@ -307,6 +308,7 @@ class Player(pygame.sprite.Sprite):
                 board.p_cord[1] -= 1
         else:
             return
+        self.image = player_image.get()
         board.update()
 
 
@@ -323,8 +325,9 @@ class Coin(pygame.sprite.Sprite):
 
 
 def start_level(num):
+    board.render()
     intro_text = [f"  Уровень {num}", "",
-                  "  Необходимо собрать 5 монет",
+                  f"  Необходимо собрать {int(len(board.emp_tiles) / 5)} монет",
                   "  и не попасться пирату"]
     fon = pygame.transform.scale(load_image('intro.jpg'), screen.get_size())
     screen.blit(fon, (0, 0))
@@ -444,7 +447,7 @@ class Gameover(pygame.sprite.Sprite):
 if __name__ == '__main__':
     pygame.display.set_caption('Pirat Escape')
     start_screen()
-    maps = ['map2.txt']
+    maps = ['map3.txt', "map4.txt", "map.txt", "map2.txt"]
     num = 0
     for m in maps:
         num += 1
@@ -477,7 +480,6 @@ if __name__ == '__main__':
                         hunter.update()
                         pygame.display.flip()
                     if event.type == pygame.KEYDOWN:
-                        timer -= 1
                         player.go(event)
                         hunter.go_to(board.p_cord)
                     if pygame.sprite.spritecollideany(player, hunter_group):
@@ -493,6 +495,7 @@ if __name__ == '__main__':
                         coins_group.update()
                     if len(coins_group.sprites()) == 0:
                         end_image = pygame.transform.scale(load_image("win.jpg"), (300, 150))
+                        all_sprites.draw(screen)
                         end_level()
                         running = False
                         over = True
